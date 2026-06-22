@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- =====================================================
+     👑 PREMIUM BIRTHDAY MINI-SITE
+     Чтобы настроить под своего друга:
+     1. Замени "Артём" на имя друга (ищи по тексту)
+     2. Замени src="photo1.jpg" ... photo5.jpg на свои фото
+     3. Замени src="video.mp4" на свое видео на 3-й странице
+     4. Замени поздравительный текст на странице 3
+     5. Положи файл music.mp3 рядом с этим HTML для музыки
+====================================================== -->
+<title>Happy Birthday ✨</title>
+
+<!-- Премиальные шрифты Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Библиотека конфетти -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<style>
+  /* ===== ПЕРЕМЕННЫЕ И СБРОС (LUXURY PALETTE) ===== */
+  :root {
+    --bg-dark:    #0a0a0b;
+    --bg-surface: #121214;
+    --gold:       #c5a059;
+    --gold-light: #e5c158;
+    --gold-dark:  #9a7b36;
+    --platinum:   #f5f5f7;
+    --card-bg:    rgba(255, 255, 255, 0.02);
+    --border-gold: rgba(197, 160, 89, 0.25);
+    --nav-h:      74px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'Montserrat', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+  /* ===== ФОН СО ЗВЁЗДАМИ ===== */
+  body {
+    background: var(--bg-dark);
+    color: var(--platinum);
+    min-height: 100vh;
+  }
+  #stars-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* ===== НАВИГАЦИЯ ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    background: rgba(10, 10, 11, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(197, 160, 89, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; z-index: 100; padding: 0 12px;
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--platinum); opacity: 0.5;
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(12px, 2.5vw, 14px);
+    font-weight: 500; padding: 10px 24px;
+    border-radius: 0px; cursor: pointer;
+    letter-spacing: 2px; text-transform: uppercase;
+    transition: all .4s ease;
+  }
+  .nav-btn:hover { opacity: 1; color: var(--gold); }
+  .nav-btn.active {
+    border: 1px solid var(--gold);
+    color: var(--gold); opacity: 1;
+    background: rgba(197, 160, 89, 0.05);
+  }
+
+  /* ===== СТРАНИЦЫ ===== */
+  .page {
+    display: none; position: relative; z-index: 1;
+    min-height: 100vh; padding-top: calc(var(--nav-h) + 40px);
+    padding-bottom: 60px;
+    animation: fadeIn .6s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* ===== СТРАНИЦА 1: ГАЛЕРЕЯ ===== */
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 4.5rem);
+    font-weight: 400; text-align: center;
+    background: linear-gradient(135deg, #fff, var(--gold), #fff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2; margin-bottom: 12px;
+    letter-spacing: -1px;
+  }
+  .hero-sub {
+    text-align: center; font-size: clamp(13px, 2.5vw, 16px);
+    font-weight: 300; text-transform: uppercase; letter-spacing: 4px;
+    color: var(--gold); opacity: 0.8; margin-bottom: 50px;
+  }
+  .balloons {
+    text-align: center; font-size: 1.8rem;
+    margin-bottom: 16px; opacity: 0.8;
+    letter-spacing: 10px;
+  }
+
+  /* Фотосетка на 5 фото */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .photo-card {
+    position: relative; overflow: hidden;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-gold);
+    cursor: pointer;
+    transition: all .4s cubic-bezier(0.25, 1, 0.5, 1);
+    aspect-ratio: 4/5;
+  }
+  .photo-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--gold-light);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 20px rgba(197, 160, 89, 0.1);
+  }
+  .photo-card img {
+    width: 100%; height: 100%; object-fit: cover;
+    display: block; filter: grayscale(15%);
+    transition: transform .6s ease;
+  }
+  .photo-card:hover img { transform: scale(1.04); filter: grayscale(0%); }
+  
+  .photo-caption {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 30px 20px 16px;
+    background: linear-gradient(to top, rgba(10,10,11,1) 0%, rgba(10,10,11,0.5) 60%, transparent 100%);
+    font-size: 14px; font-weight: 400; letter-spacing: 1px;
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #121214, #1a1a1e);
+    font-size: 2rem; gap: 12px; color: var(--gold);
+  }
+  .photo-placeholder span { font-size: 12px; opacity: .5; font-family: 'Montserrat', sans-serif; text-transform: uppercase; letter-spacing: 1px; color: #fff;}
+
+  /* ===== СТРАНИЦА 2: ИГРА ===== */
+  .game-header {
+    text-align: center; margin-bottom: 32px;
+  }
+  .game-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    color: var(--gold); font-weight: 400; margin-bottom: 10px;
+  }
+  .game-stats {
+    display: flex; justify-content: center; gap: 24px;
+    margin-bottom: 30px; flex-wrap: wrap;
+  }
+  .stat-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-gold);
+    padding: 14px 36px; text-align: center;
+    min-width: 140px;
+  }
+  .stat-label { font-size: 11px; opacity: .5; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;}
+  .stat-value { font-size: 2.2rem; font-weight: 300; color: var(--gold-light); font-family: 'Playfair Display', serif;}
+
+  #game-arena {
+    position: relative;
+    width: 100%; max-width: 750px;
+    height: 450px; margin: 0 auto;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-gold);
+    overflow: hidden; cursor: crosshair;
+  }
+  .falling-item {
+    position: absolute; top: -60px;
+    font-size: 2rem; line-height: 1;
+    user-select: none; cursor: pointer;
+    transition: transform .1s;
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,.5));
+  }
+
+  #game-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(10,10,11,0.95);
+    z-index: 10; gap: 24px; text-align: center; padding: 24px;
+  }
+  #game-overlay h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
+    color: var(--gold); font-weight: 400;
+  }
+  #game-overlay p { opacity: .7; font-size: 14px; max-width: 360px; line-height: 1.6; letter-spacing: 0.5px;}
+
+  /* КНОПКИ В СТИЛЕ ЛАКШЕРИ */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    background: transparent;
+    color: var(--gold); font-family: 'Montserrat', sans-serif;
+    激font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px;
+    padding: 16px 36px; border: 1px solid var(--gold); cursor: pointer;
+    transition: all .3s ease;
+  }
+  .btn:hover {
+    background: var(--gold); color: var(--bg-dark);
+    box-shadow: 0 10px 25px rgba(197, 160, 89, 0.2);
+  }
+  .btn-gold {
+    background: var(--gold); color: var(--bg-dark);
+  }
+  .btn-gold:hover {
+    background: var(--gold-light);
+    box-shadow: 0 10px 25px rgba(229, 193, 88, 0.3);
+  }
+
+  /* ===== СТРАНИЦА 3: ПОЗДРАВЛЕНИЕ ===== */
+  .congrats-section {
+    max-width: 750px; margin: 0 auto;
+    text-align: center;
+  }
+  .congrats-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 3.8rem);
+    font-weight: 400; color: var(--gold);
+    margin-bottom: 30px;
+  }
+  .congrats-text {
+    font-size: clamp(15px, 2.5vw, 17px);
+    line-height: 1.9; opacity: .85; font-weight: 300;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-gold);
+    padding: 40px; margin-bottom: 32px; text-align: left;
+    letter-spacing: 0.3px;
+  }
+  .congrats-text p { margin-bottom: 18px; }
+  .congrats-text p:last-child { margin-bottom: 0; }
+
+  /* СТИЛЬНЫЙ ВИДЕОПЛЕЕР */
+  .video-container {
+    width: 100%; margin-bottom: 48px;
+    border: 1px solid var(--border-gold);
+    background: #000; overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+    aspect-ratio: 16/9;
+  }
+  .video-container video {
+    width: 100%; height: 100%; object-fit: cover;
+    display: block;
+  }
+
+  /* Торт */
+  .cake-wrapper {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 24px;
+    margin-bottom: 48px;
+  }
+  .cake-svg-wrap { position: relative; display: inline-block; }
+  .candle-flame { transition: opacity .5s; }
+
+  /* Музыкальная секция */
+  .music-section {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 14px;
+    margin-bottom: 20px;
+  }
+  .music-hint {
+    font-size: 11px; opacity: .4; letter-spacing: 1px;
+    max-width: 380px; text-align: center; line-height: 1.6;
+  }
+
+  /* ===== АДАПТИВНОСТЬ ===== */
+  @media (max-width: 600px) {
+    nav { gap: 4px; height: 64px; }
+    .nav-btn { padding: 8px 12px; font-size: 11px; letter-spacing: 1px; }
+    .page { padding-top: calc(64px + 24px); }
+    .gallery-grid { grid-template-columns: 1fr; gap: 20px; }
+    #game-arena { height: 360px; }
+    .game-stats { gap: 12px; }
+    .stat-box { padding: 10px 16px; min-width: 110px; }
+    .congrats-text { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Звёздный фон -->
+<canvas id="stars-canvas"></canvas>
+
+<!-- ===== НАВИГАЦИЯ ===== -->
+<nav>
+  <button class="nav-btn active" onclick="showPage('gallery')">Галерея</button>
+  <button class="nav-btn"        onclick="showPage('game')">Игра</button>
+  <button class="nav-btn"        onclick="showPage('congrats')">Поздравление</button>
+</nav>
+
+<!-- =====================================================
+     СТРАНИЦА 1: ГАЛЕРЕЯ ВОСПОМИНАНИЙ (ОВЕРНУТО В LUXURY)
+====================================================== -->
+<section class="page active" id="page-gallery">
+  <div class="container">
+    <div class="balloons">✨ 🥂 ✨</div>
+
+    <!-- === ЗАМЕНИТЕ "Артём" НА ИМЯ ВАШЕГО ДРУГА === -->
+    <h1 class="hero-title">С днём рождения, Тамерлан</h1>
+    <p class="hero-sub">Коллекция лучших мгновений</p>
+
+    <!-- Ровно 5 карточек для фото в строгом стиле -->
+    <div class="gallery-grid">
+      <div class="photo-card">
+        <img src="IMG_2760.JPG.jpeg" alt="Moments 1"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">✨<span>Кадр 01</span></div>
+        <div class="photo-caption">Эстетика момента</div>
+      </div>
+
+      <div class="photo-card">
+        <img src="IMG_7701.JPG.jpeg" alt="Moments 2"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">✨<span>Кадр 02</span></div>
+        <div class="photo-caption">Атмосфера вечера</div>
+      </div>
+
+      <div class="photo-card">
+        <img src="IMG_7703.JPG.jpeg" alt="Moments 3"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">✨<span>Кадр 03</span></div>
+        <div class="photo-caption">Знаковое событие</div>
+      </div>
+
+      <div class="photo-card">
+        <img src="111222.jpeg" alt="Moments 4"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">✨<span>Кадр 04</span></div>
+        <div class="photo-caption">Особое воспоминание</div>
+      </div>
+
+      <div class="photo-card">
+        <img src="123.jpeg" alt="Moments 5"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">✨<span>Кадр 05</span></div>
+        <div class="photo-caption">Вне времени</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     СТРАНИЦА 2: МИНИ-ИГРА (ИНТЕРФЕЙС ПЕРЕКРАШЕН)
+====================================================== -->
+<section class="page" id="page-game">
+  <div class="container">
+    <div class="game-header">
+      <h2 class="game-title">Поймай подарки</h2>
+      <p style="opacity:.5; font-size:13px; text-transform:uppercase; letter-spacing:1px;">Небольшой интерактив перед главным событием</p>
+    </div>
+
+    <div class="game-stats">
+      <div class="stat-box">
+        <div class="stat-label">Счет</div>
+        <div class="stat-value" id="score-display">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Время</div>
+        <div class="stat-value" id="timer-display">30</div>
+      </div>
+    </div>
+
+    <div id="game-arena">
+      <div id="game-overlay">
+        <h3>Испытание на скорость</h3>
+        <p>У тебя ровно 30 секунд. Кликай или тапай по падающим трофеям, пока они не исчезли за пределами экрана.</p>
+        <button class="btn" onclick="startGame()">Начать игру</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     СТРАНИЦА 3: ПОЗДРАВЛЕНИЕ, ВИДЕО И ТОРТ
+====================================================== -->
+<section class="page" id="page-congrats">
+  <div class="container">
+    <div class="congrats-section">
+      <h2 class="congrats-title">С днём рождения!</h2>
+
+      <!-- ТЕКСТ ПОЗДРАВЛЕНИЯ -->
+      <div class="congrats-text">
+        <p>Дорогой Тамерлан! Сегодня исключительный день, и я искренне рад поздравить тебя с твоим праздником. 🌟</p>
+        <p>Ты — человек редких качеств, чье присутствие делает жизнь окружающих глубже и интереснее. Твоя надежность, интеллект и верность своим целям всегда вызывали и вызывают подлинное уважение.</p>
+        <p>Желаю, чтобы каждый твой шаг вел к масштабным победам, а новые высоты покорялись легко и уверенно. Пусть рядом всегда будут единомышленники, а вдохновение никогда не покидает. 🚀</p>
+        <p>За твой успех и новые грандиозные главы жизни! 🥂✨</p>
+      </div>
+
+      <!-- === НОВЫЙ БЛОК: СТИЛЬНЫЙ ВИДЕОПЛЕЕР === -->
+      <div class="video-container">
+        <!-- 
+           Замени video.mp4 на имя своего видеофайла. 
+           Он должен лежать в той же папке, что и этот сайт.
+        -->
+        <video src="video.mp4" controls poster="" playsinline></video>
+      </div>
+
+      <!-- ТОРТ С ИНТЕРАКТИВНЫМИ СВЕЧАМИ (ЦВЕТА ИЗМЕНЕНЫ НА ЛАКШЕРИ) -->
+      <div class="cake-wrapper">
+        <svg id="cake-svg" viewBox="0 0 260 220" width="260" height="220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Тарелка -->
+          <ellipse cx="130" cy="208" rx="110" ry="12" fill="rgba(197,160,89,0.15)"/>
+          <!-- Нижний ярус (Стильный Черный Графит) -->
+          <rect x="20" y="140" width="220" height="65" rx="4" fill="#1a1a1c" stroke="var(--gold)" stroke-width="0.5"/>
+          <rect x="20" y="140" width="220" height="15" rx="2" fill="#252529"/>
+          <!-- Верхний ярус (Благородное Золото) -->
+          <rect x="50" y="90" width="160" height="55" rx="4" fill="#c5a059"/>
+          <rect x="50" y="90" width="160" height="12" rx="2" fill="#e5c158"/>
+          <!-- Элегантные элементы декора вместо капель -->
+          <circle cx="70" cy="115" r="3" fill="#1a1a1c"/>
+          <circle cx="100" cy="115" r="3" fill="#1a1a1c"/>
+          <circle cx="130" cy="115" r="3" fill="#1a1a1c"/>
+          <circle cx="160" cy="115" r="3" fill="#1a1a1c"/>
+          <circle cx="190" cy="115" r="3" fill="#1a1a1c"/>
+          <!-- Строгий текст на торте -->
+          <text x="130" y="175" text-anchor="middle" font-family="Montserrat,sans-serif"
+                font-size="12" font-weight="500" fill="var(--gold)" letter-spacing="3">GOLDEN AGE</text>
+
+          <!-- Свечи (3 штуки) -->
+          <!-- Свеча 1 -->
+          <rect x="86" y="62" width="8" height="30" rx="1" fill="#fff" id="c1-body"/>
+          <g id="flame1" class="candle-flame">
+            <ellipse cx="90" cy="56" rx="4" ry="7" fill="#ff9500" opacity=".9"/>
+            <ellipse cx="90" cy="57" rx="2" ry="4" fill="#ffd700"/>
+            <animateTransform attributeName="transform" type="scale"
+              values="1,1;1.1,0.9;1,1" dur="1.2s" repeatCount="indefinite" additive="sum"
+              transformOrigin="90 60"/>
+          </g>
+          <text id="smoke1" x="90" y="52" text-anchor="middle" font-size="12" display="none">💨</text>
+
+          <!-- Свеча 2 -->
+          <rect x="126" y="58" width="8" height="34" rx="1" fill="var(--gold-light)" id="c2-body"/>
+          <g id="flame2" class="candle-flame">
+            <ellipse cx="130" cy="51" rx="4" ry="7" fill="#ff9500" opacity=".9"/>
+            <ellipse cx="130" cy="52" rx="2" ry="4" fill="#ffd700"/>
+            <animateTransform attributeName="transform" type="scale"
+              values="1,1;0.9,1.1;1,1" dur="1.5s" repeatCount="indefinite" additive="sum"
+              transformOrigin="130 56"/>
+          </g>
+          <text id="smoke2" x="130" y="47" text-anchor="middle" font-size="12" display="none">💨</text>
+
+          <!-- Свеча 3 -->
+          <rect x="165" y="62" width="8" height="30" rx="1" fill="#fff" id="c3-body"/>
+          <g id="flame3" class="candle-flame">
+            <ellipse cx="169" cy="56" rx="4" ry="7" fill="#ff9500" opacity=".9"/>
+            <ellipse cx="169" cy="57" rx="2" ry="4" fill="#ffd700"/>
+            <animateTransform attributeName="transform" type="scale"
+              values="1,1;1.15,0.85;1,1" dur="1.8s" repeatCount="indefinite" additive="sum"
+              transformOrigin="169 60"/>
+          </g>
+          <text id="smoke3" x="169" y="52" text-anchor="middle" font-size="12" display="none">💨</text>
+        </svg>
+
+        <button class="btn btn-gold" id="blow-btn" onclick="blowCandles()">
+          Задуть свечи
+        </button>
+      </div>
+
+      <!-- МУЗЫКАЛЬНАЯ СЕКЦИЯ -->
+      <div class="music-section">
+        <audio id="bg-music" loop>
+          <source src="music.mp3" type="audio/mpeg">
+        </audio>
+        <button class="btn" id="music-btn" onclick="toggleMusic()">
+          Аудиосопровождение
+        </button>
+        <p class="music-hint">
+          Поместите файл <strong>music.mp3</strong> в корневую директорию проекта для активации фоновой музыки.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     JAVASCRIPT (ЛОГИКА СОХРАНЕНА НА 100%)
+====================================================== -->
+<script>
+// ЗВЁЗДНЫЙ ФОН
+(function initStars() {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx    = canvas.getContext('2d');
+  let stars    = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function createStars(n) {
+    stars = [];
+    for (let i = 0; i < n; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.3,
+        a: Math.random(),
+        da: (Math.random() * 0.004 + 0.001) * (Math.random() < .5 ? 1 : -1)
+      });
+    }
+  }
+
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.a += s.da;
+      if (s.a <= 0 || s.a >= 1) s.da *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  resize();
+  createStars(150);
+  drawStars();
+  window.addEventListener('resize', () => { resize(); createStars(150); });
+})();
+
+// НАВИГАЦИЯ МЕЖДУ СТРАНИЦАМИ
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById('page-' + name).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  const idx = { gallery: 0, game: 1, congrats: 2 }[name];
+  if (btns[idx]) btns[idx].classList.add('active');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// МИНИ-ИГРА
+const GAME_DURATION = 30;
+const ITEMS = ['🎁','✨','🥂','⭐','👑','💼','💎','💰','🎉','🍾'];
+
+let score       = 0;
+let timeLeft    = GAME_DURATION;
+let gameRunning = false;
+let spawnTimer  = null;
+let countTimer  = null;
+let items       = [];
+
+function startGame() {
+  score    = 0;
+  timeLeft = GAME_DURATION;
+  items    = [];
+  gameRunning = true;
+
+  document.getElementById('score-display').textContent = 0;
+  document.getElementById('timer-display').textContent = GAME_DURATION;
+  document.getElementById('game-overlay').style.display = 'none';
+
+  document.querySelectorAll('.falling-item').forEach(el => el.remove());
+
+  countTimer = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timer-display').textContent = timeLeft;
+    if (timeLeft <= 5) document.getElementById('timer-display').style.color = '#e5c158';
+    if (timeLeft <= 0) endGame();
+  }, 1000);
+
+  spawnTimer = setInterval(spawnItem, 800);
+}
+
+function spawnItem() {
+  if (!gameRunning) return;
+  const arena = document.getElementById('game-arena');
+  const el    = document.createElement('div');
+  el.className = 'falling-item';
+  el.textContent = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+
+  const maxX = arena.offsetWidth - 50;
+  el.style.left  = Math.random() * maxX + 'px';
+  el.style.top   = '-60px';
+
+  const duration = 2 + Math.random() * 2;
+  el.style.transition = `top ${duration}s linear`;
+
+  arena.appendChild(el);
+
+  el.addEventListener('click', () => {
+    if (!gameRunning) return;
+    score++;
+    document.getElementById('score-display').textContent = score;
+    el.style.transition = 'transform .15s, opacity .15s';
+    el.style.transform  = 'scale(1.6)';
+    el.style.opacity    = '0';
+    setTimeout(() => el.remove(), 180);
+  });
+
+  requestAnimationFrame(() => {
+    el.style.top = arena.offsetHeight + 'px';
+  });
+
+  setTimeout(() => el.remove(), duration * 1000 + 100);
+}
+
+function endGame() {
+  gameRunning = false;
+  clearInterval(spawnTimer);
+  clearInterval(countTimer);
+
+  document.querySelectorAll('.falling-item').forEach(el => el.remove());
+  document.getElementById('timer-display').style.color = '';
+
+  const overlay = document.getElementById('game-overlay');
+  overlay.style.display = 'flex';
+
+  const medal = score >= 20 ? '🏆' : score >= 10 ? '👑' : '✨';
+  overlay.innerHTML = `
+    <h3>${medal} Результат раунда</h3>
+    <p>Успешно собрано трофеев: <strong style="color:var(--gold-light);font-size:1.4em">${score}</strong></p>
+    <button class="btn btn-gold" onclick="showPage('congrats')">
+      Перейти к поздравлению
+    </button>
+    <button class="btn" style="background:rgba(255,255,255,.03); margin-top:4px" onclick="startGame()">
+      Повторить попытку
+    </button>
+  `;
+}
+
+// ТОРТ: ЗАДУТЬ СВЕЧИ
+let candlesBlown = false;
+
+function blowCandles() {
+  if (candlesBlown) return;
+  candlesBlown = true;
+
+  [1, 2, 3].forEach((i, idx) => {
+    setTimeout(() => {
+      const flame = document.getElementById('flame' + i);
+      const smoke = document.getElementById('smoke' + i);
+      if (flame) flame.style.opacity = '0';
+      if (smoke) { smoke.style.display = 'block'; }
+    }, idx * 350);
+  });
+
+  setTimeout(() => {
+    launchFireworks();
+    document.getElementById('blow-btn').textContent = 'Событие активировано ✨';
+    document.getElementById('blow-btn').disabled = true;
+  }, 1400);
+}
+
+// ПРЕМИАЛЬНЫЙ САЛЮТ (ЗОЛОТЫЕ И БЕЛЫЕ ЧАСТИЦЫ)
+function launchFireworks() {
+  const duration = 4000;
+  const end      = Date.now() + duration;
+
+  (function frame() {
+    confetti({
+      particleCount: 5,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors: ['#c5a059', '#e5c158', '#ffffff', '#9a7b36']
+    });
+    confetti({
+      particleCount: 5,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors: ['#c5a059', '#e5c158', '#ffffff', '#9a7b36']
+    });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+
+// МУЗЫКА
+let musicPlaying = false;
+
+function toggleMusic() {
+  const audio = document.getElementById('bg-music');
+  const btn   = document.getElementById('music-btn');
+  if (musicPlaying) {
+    audio.pause();
+    btn.textContent = 'Аудиосопровождение';
+    musicPlaying = false;
+  } else {
+    audio.play().catch(() => {});
+    btn.textContent = 'Пауза';
+    musicPlaying = true;
+  }
+}
+</script>
+</body>
+</html>
